@@ -107,6 +107,14 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
     public boolean tilt(Side side) {
+        //调整视角
+        switch (side){
+            case NORTH -> board.setViewingPerspective(Side.NORTH);
+            case EAST -> board.setViewingPerspective(Side.EAST);
+            case SOUTH -> board.setViewingPerspective(Side.SOUTH);
+            case WEST -> board.setViewingPerspective(Side.WEST);
+        }
+
         boolean changed;
         changed = false;
 
@@ -114,12 +122,76 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
+        //设定检测器，并且对每一列分别进行合并，得到下一次操作的结果
+        boolean[] checkChanged = new boolean[board.size()];
+        for (int i = 0; i < board.size(); i++) {
+            checkChanged[i]=columnMerge(i);
+        }
+
+        //用于修改changed的值，有改变即设定为true
+        for (int i = 0; i < board.size() ; i++) {
+            if (checkChanged[i]==true) {
+                changed = true;
+                break;
+            }
+        }
+
+        board.setViewingPerspective(Side.NORTH);
+
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
     }
+
+    public boolean columnMerge(int c){
+        //用于检测changed是否改变
+        boolean changed = false;
+        boolean flag = false;
+        //mergecheck用于判断当前格子上是否发生过合并，如果已经合并则无法再次合并
+        boolean[] mergeCheck = new boolean[board.size()];
+        for (int j = 0; j < board.size(); j++) {
+            mergeCheck[j]=false;
+        }
+        /*对于每一列，从第二行判断是否能与上一行进行合并，例如第二行和第三行，第一行和第二行，
+        第零行和第一行。每一轮检查time次，因此实际为210、21、2，这样可以检测所有合并的可能性
+         */
+        int time = board.size()-1;
+        for (int i = 0; i < time; i++) {
+            //对于各种可能出现的情况的判断
+            for (int r = board.size()-2; r >= i; r--) {
+                Tile t = board.tile(c,r);
+                if (board.tile(c,r)==null)
+                    continue;
+
+                if (board.tile(c,r+1)==null){
+                    board.move(c,r+1,t);
+                    flag = true;
+                }
+                else if (board.tile(c,r).value()==board.tile(c,r+1).value()){
+                    if (mergeCheck[r+1]==false){
+                        board.move(c,r+1,t);
+                        score+=board.tile(c,r+1).value();
+                        mergeCheck[r+1]=true;
+                        flag = true;
+                    }
+                }
+            }
+            //对于案例testMultipleMoves1的特殊处理
+            if (mergeCheck[board.size()-2]==true)
+                mergeCheck[board.size()-1]=true;
+
+
+        }
+        if (flag==true)
+            changed = true;
+        return changed;
+    }
+
+
+
+
 
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
@@ -138,6 +210,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i,j)==null)
+                    return true;
+            }
+        }
+
         return false;
     }
 
@@ -148,6 +227,15 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i,j)==null)
+                    continue;
+                if (b.tile(i,j).value()==MAX_PIECE)
+                    return true;
+            }
+        }
         return false;
     }
 
@@ -159,8 +247,33 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if (emptySpaceExists(b)==true)
+            return true;
+        if (SearchAdjacent(b)==true)
+            return true;
+
         return false;
     }
+
+    public static boolean SearchAdjacent(Board b){
+        for (int i = 0; i < b.size()-1; i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if (b.tile(i,j).value()==b.tile(i+1,j).value())
+                    return true;
+            }
+        }
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size()-1; j++) {
+                if (b.tile(i,j).value()==b.tile(i,j+1).value())
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
 
 
     @Override
