@@ -10,10 +10,15 @@ public class IntListExercises {
      */
     public static void addConstant(IntList lst, int c) {
         IntList head = lst;
-        while (head.rest != null) {
+        for (int i = 0; i < lst.size(); i++) {
             head.first += c;
             head = head.rest;
         }
+
+//        while (head.rest != null) {
+//            head.first += c;
+//            head = head.rest;
+//        }
     }
 
     /**
@@ -26,9 +31,13 @@ public class IntListExercises {
     public static void setToZeroIfMaxFEL(IntList L) {
         IntList p = L;
         while (p != null) {
-            if (firstDigitEqualsLastDigit(max(p))) {
+            int currentMax = max(p);
+            boolean firstEqualsLast = firstDigitEqualsLastDigit(currentMax);
+            if (firstEqualsLast)
                 p.first = 0;
-            }
+//            if (firstDigitEqualsLastDigit(max(p))) {
+//                p.first = 0;
+//            }
             p = p.rest;
         }
     }
@@ -55,6 +64,8 @@ public class IntListExercises {
             x = x / 10;
         }
         int firstDigit = x % 10;
+        if (x==10)
+            firstDigit = 1;
         return firstDigit == lastDigit;
     }
 
@@ -77,6 +88,7 @@ public class IntListExercises {
             lst.first *= lst.first;
         }
 
-        return currElemIsPrime || squarePrimes(lst.rest);
+
+        return squarePrimes(lst.rest)||currElemIsPrime  ;
     }
 }
